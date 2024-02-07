@@ -6,8 +6,10 @@ const bucketName = process.env.BUCKET_NAME
 let cities = ['Miami', 'Aventura', 'Doral' , 'Fort Lauderdale']
 
 exports.handler = async (event) => {
-  console.log()  
+  console.log(JSON.stringify(event))  
+  
   let fileName;
+
   try {
     for (const city of cities) {
       console.log('Getting city information...');
@@ -24,12 +26,8 @@ exports.handler = async (event) => {
       body: JSON.stringify({ message: 'Files created successfully!' }),
     };
 
-
   } catch (error) {
-    console.error('Error: ', error);
-        
-
-    
+    console.error('Error: ', error); 
   }
  
 }
@@ -44,15 +42,11 @@ readWeatherInformation = async (city) => {
       };
       return await axios.request(config).then((response) => {
         let responseData = response.data;
-        
-        return responseData;
+          return responseData;
 
       }).catch((error) => {
-
         console.log(error);
       });
-
-
 }
 
 writeInfoToFile = (bucketName, fileName, dataToWrite) => {
@@ -62,7 +56,5 @@ writeInfoToFile = (bucketName, fileName, dataToWrite) => {
         Key: fileName,
         Body: dataToWrite,
       };
-
       return s3.send(new PutObjectCommand(params));
-
 }
