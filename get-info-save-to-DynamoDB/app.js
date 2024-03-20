@@ -5,9 +5,11 @@ const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
     // Initialize the S3 client
     const s3Client = new S3Client({ region: 'us-east-1' }); // Replace 'us-east-1' with your desired region
     // Initialize the DynamoDB client
-    const client = new DynamoDBClient({ region: "us-east-1" }); // Replace "your-region" with your AWS region
+    const DBClient = new DynamoDBClient({ region: "us-east-1" }); // Replace "your-region" with your AWS region
     // List all objects in the bucket
     const bucketName = process.env.BUCKET_NAME
+    const tableName = process.env.TABLE_NAME
+
 exports.handler = async (event) => {
     console.log(JSON.stringify(event))
 
@@ -21,6 +23,7 @@ exports.handler = async (event) => {
             console.log(`File content String: ${fileContentString} ` );
             const fileData = await parseDataToJson(fileContentString)
             console.log(`File Parse JSON: ${fileData.location.name}`);
+            console.log(`Inserting data into DynamoDB`);
             const dataInserted = await storeDataInDynamoDB(file, fileData);
             console.log("Item inserted successfully:", dataInserted);
             const copyData = await copyFile(file)
@@ -84,11 +87,13 @@ storeDataInDynamoDB = async (file, fileContent) => {
 
     // Prepare the PutItemCommand
     const params = {
-        TableName: "test-weather-app", // Replace "YourTableName" with your actual table name
+        TableName: tableName, // Replace "YourTableName" with your actual table name
         Item: jsonData
     };
-    const putCommand = new PutItemCommand(params);
-    return await client.send(putCommand);
+
+    
+    const putCommand =  new PutItemCommand(params);
+    return await DBClient.send(putCommand);
 }
 
 
@@ -103,7 +108,7 @@ copyFile = async (sourceKey) => {
     // Copy the object to the new folder
     const copyCommand = new CopyObjectCommand(copyParams);
 
-    return await client.send(copyCommand);
+    return await s3Client.send(copyCommand);
 
 }
 
@@ -116,7 +121,7 @@ deleteFile = async (sourceKey) => {
 
     const deleteCommand = new DeleteObjectCommand(deleteParams);
 
-    return await client.send(deleteCommand);
+    return await s3Client.send(deleteCommand);
 
 }
 
