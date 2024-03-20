@@ -3,11 +3,12 @@ const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 
 const s3 = new S3Client();
 const bucketName = process.env.BUCKET_NAME
-let cities = ['Miami', 'Aventura', 'Doral' , 'Fort Lauderdale']
+let cities = ["Miami", "Aventura", "Doral" , "Fort Lauderdale"]
 
 exports.handler = async (event) => {
   console.log(JSON.stringify(event))  
-  
+  console.log(bucketName);
+
   let fileName;
 
   try {
@@ -32,29 +33,22 @@ exports.handler = async (event) => {
  
 }
 
+
 readWeatherInformation = async (city) => {
 
-    let config = {
-        method: 'get',
-        maxBodyLength: Infinity,
-        url: `http://api.weatherapi.com/v1/current.json?key=5853f867157c4d1cbfa204841243101&q=${city}&aqi=no`,
-        headers: { }
-      };
-      return await axios.request(config).then((response) => {
-        let responseData = response.data;
-          return responseData;
+  const weatherApiUrl = `http://api.weatherapi.com/v1/current.json?key=5853f867157c4d1cbfa204841243101&q=${city}&aqi=no`;
+  const response = await axios.get(weatherApiUrl);
+  return response.data;
 
-      }).catch((error) => {
-        console.log(error);
-      });
 }
 
-writeInfoToFile = (bucketName, fileName, dataToWrite) => {
+writeInfoToFile = async (bucketName, fileName, dataToWrite) => {
 
-    const params = {
-        Bucket: bucketName,
-        Key: fileName,
-        Body: dataToWrite,
-      };
-      return s3.send(new PutObjectCommand(params));
+        const uploadParams = {
+            Bucket: bucketName,
+            Key: fileName,
+            Body: JSON.stringify(dataToWrite),
+            ContentType: "application/json"
+        };
+      return await s3.send(new PutObjectCommand(uploadParams));
 }
